@@ -19,8 +19,6 @@ class CreateOrdersTable extends Migration
             $table->string('phone');
             $table->string('email');
             $table->string('address');
-            $table->integer('total_product');
-            $table->double('price');
             $table->double('total_price');
             $table->timestamps();
         });

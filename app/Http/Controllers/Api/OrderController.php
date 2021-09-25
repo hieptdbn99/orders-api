@@ -29,8 +29,26 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        $order = Order::create($request->all());
-        return new OrderResource($order);
+        $order = Order::create([
+            'name_customer' => $request->name_customer,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'address' => $request->address,
+            'total_price' => $request->total_price,
+        ]);
+
+        if($request->arrayProduct){
+            foreach($request->arrayProduct[0] as $product){
+                $order->products()->attach($product['id'], [
+                    'total_product' =>(int)$product['total_product'],
+                    'total_price_pr' => $product['total_price_pr']
+                ]);
+            }
+        };
+
+        return response()->json($order,'200');
+
+
     }
 
     /**
