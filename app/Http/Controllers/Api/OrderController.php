@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Http\Resources\Order as OrderResource;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -16,7 +17,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::all();
+        $orders = Order::orderBy('created_at', 'desc')->get();
         return response()->json($orders,'200');
         //
     }
@@ -38,9 +39,9 @@ class OrderController extends Controller
         ]);
 
         if($request->arrayProduct){
-            foreach($request->arrayProduct[0] as $product){
+            foreach($request->arrayProduct as $product){
                 $order->products()->attach($product['id'], [
-                    'total_product' =>(int)$product['total_product'],
+                    'total_product' => $product['total_product'],
                     'total_price_pr' => $product['total_price_pr']
                 ]);
             }
@@ -78,12 +79,27 @@ class OrderController extends Controller
         $order->phone = $request->phone;
         $order->email = $request->email;
         $order->address = $request->address;
-        $order->total_product = $request->total_product;
-        $order->price = $request->price;
-        $order->total_price = $request->total_price;
+        $order->total_price =$request ->total_price;
+        DB::table('order_product')->where('order_id',$order->id)->delete();
+        if($request->arrayProduct){
+            foreach($request->arrayProduct as $product){
+                if ($product['id']){
+                    $order->products()->attach($product['id'], [
+                        'total_product' =>(int)$product['total_product'],
+                        'total_price_pr' => $product['total_price_pr']
+                    ]);
+                }else {
+                    $order->products()->attach($product['product_id'], [
+                        'total_product' =>(int)$product['total_product'],
+                        'total_price_pr' => $product['total_price_pr']
+                    ]);
+                }
+
+            }
+        };
         $order->save();
 
-        return new OrderResource($order);
+        return response()->json($order,'200');
     }
 
     /**
@@ -97,5 +113,18 @@ class OrderController extends Controller
         //
         $order->delete();
         return response()->json(['message' => 'delete success'],200);
+    }
+    public function  getProductOrder(Request $request,Order $order){
+        $listProductOrder = DB::table('products')
+            ->join('order_product', 'products.id', '=', 'order_product.product_id')
+            ->where('order_product.order_id',$order->id)
+            ->get(array(
+                'products.id as id',
+                'total_product',
+                'total_price_pr',
+                'price',
+                'name',
+            ));
+        return response()->json($listProductOrder,'200');
     }
 }
