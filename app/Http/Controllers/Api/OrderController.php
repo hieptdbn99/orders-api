@@ -7,6 +7,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Http\Resources\Order as OrderResource;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class OrderController extends Controller
 {
@@ -36,6 +37,7 @@ class OrderController extends Controller
             'email' => $request->email,
             'address' => $request->address,
             'total_price' => $request->total_price,
+            'date' => $request->date
         ]);
 
         if($request->arrayProduct){
@@ -80,6 +82,7 @@ class OrderController extends Controller
         $order->email = $request->email;
         $order->address = $request->address;
         $order->total_price =$request ->total_price;
+        $order->date =$request ->date;
         DB::table('order_product')->where('order_id',$order->id)->delete();
         if($request->arrayProduct){
             foreach($request->arrayProduct as $product){
